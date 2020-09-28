@@ -31,40 +31,15 @@ namespace Completed
 		private bool enemiesMoving;								//Boolean to check if enemies are moving.
 		public bool doingSetup = true;                          //Boolean to check if we're setting up board, prevent Player from moving during setup.
 
-        private bool heuristicModeSet = false;
-
         public void CreateNewLevel()
         {
             instance.level++;
             instance.InitGame();
         }
 
-        public void HandleHeuristicMode()
-        {
-            if (!heuristicModeSet)
-            {
-                Time.fixedDeltaTime = 0.02f;
-                levelStartDelay = 2f;
-                restartLevelDelay = 1f;
-                turnDelay = 0.1f;
-                moveTime = 0.1f;
-                heuristicModeSet = true;
-
-                //By storing the reciprocal of the move time we can use it by multiplying instead of dividing, this is more efficient.
-                inverseMoveTime = 1f / moveTime;
-            }
-        }
-
 		//Awake is always called before any Start functions
 		void Awake()
 		{
-            // These values will be updated if the game is started in heuristic mode.
-            Time.fixedDeltaTime = 0.1f;
-            levelStartDelay = 0.001f;
-            restartLevelDelay = 0.001f;
-            turnDelay = 0.001f;
-            moveTime = 0.001f;
-
             //By storing the reciprocal of the move time we can use it by multiplying instead of dividing, this is more efficient.
             inverseMoveTime = 1f / moveTime;
 

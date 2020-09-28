@@ -57,7 +57,6 @@ namespace Completed
 		{
 			//Every time player moves, subtract from food points total.
 			food--;
-            agent.HandleAttemptMove();
 
             //Update food text display to reflect current score.
             foodText.text = "Food: " + food;
@@ -108,8 +107,6 @@ namespace Completed
             //Check if the tag of the trigger collided with is Exit.
             if (other.tag == "Exit")
 			{
-                agent.HandleFinishlevel();
-
                 //Invoke the Restart function to start the next level with a delay of restartLevelDelay (default 1 second).
                 Invoke ("Restart", GameManager.instance.restartLevelDelay);
 
@@ -124,7 +121,6 @@ namespace Completed
 			{
 				//Add pointsPerFood to the players current food total.
 				food += pointsPerFood;
-                agent.HandleFoundFood();
 
                 //Update foodText to represent current total and notify player that they gained points
                 foodText.text = "+" + pointsPerFood + " Food: " + food;
@@ -141,7 +137,6 @@ namespace Completed
 			{
 				//Add pointsPerSoda to players food points total
 				food += pointsPerSoda;
-                agent.HandleFoundSoda();
 
                 //Update foodText to represent current total and notify player that they gained points
                 foodText.text = "+" + pointsPerSoda + " Food: " + food;
@@ -158,8 +153,6 @@ namespace Completed
 		//Restart reloads the scene when called.
 		private void Restart ()
 		{
-            agent.HandleLevelRestart(gameOver);
-
             if (gameOver)
             {
                 GameManager.instance.level = 0;
@@ -188,7 +181,6 @@ namespace Completed
 			
 			//Subtract lost food points from the players total.
 			food -= loss;
-            agent.HandleLoseFood(loss);
 
             //Update the food display with the new total.
             foodText.text = "-"+ loss + " Food: " + food;
