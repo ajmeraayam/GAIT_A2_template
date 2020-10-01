@@ -38,8 +38,10 @@ namespace Completed
 		public GameObject[] outerWallTiles;                             //Array of outer tile prefabs.
 
         private GameObject dynamicObjectsHolder;
+        public GameObject DynamicObjectsHolder { get{ return dynamicObjectsHolder; } }
 		private GameObject boardHolder;									//A variable to store a reference to the transform of our Board object.
-		private List <Vector3> gridPositions = new List <Vector3> ();   //A list of possible locations to place tiles.
+		public GameObject BoardHolder { get{ return boardHolder; } }
+        private List <Vector3> gridPositions = new List <Vector3> ();   //A list of possible locations to place tiles.
 
 
         //Clears our list gridPositions and prepares it to generate a new board.
