@@ -8,22 +8,28 @@ namespace Completed
 
     public class GameState
     {
+        private Vector3 playerPosition;
+        public Vector3 PlayerPosition { get { return playerPosition; } }
         // Loader instance
         private Loader loaderScript;
-        public Loader LoaderScript { set { loaderScript = value; } }
+        public Loader LoaderScript { get{ return loaderScript; } }
         // GameManager game object
         private GameObject gameManager;
+        public GameObject GameManager { get{ return gameManager; } }
         // Board manager instance
         private BoardManager boardManager;
+        public BoardManager BoardManagerScript { get{ return boardManager; } }
         // Dynamic Objects that are generated for each level
         private GameObject dynamicObjects;
+        public GameObject DynamicObjects { get{ return dynamicObjects; } }
         // Floor and Outer walls that are generated for each level
         private GameObject boardObjects;
+        public GameObject BoardObjects { get{ return boardObjects; } }
         private GameStateData stateData;
 
-        
-        public GameState(Loader loader, GameObject gameManager, BoardManager boardManager, GameObject dynamicObjects, GameObject boardObjects)
+        public GameState(Vector3 playerPosition, Loader loader, GameObject gameManager, BoardManager boardManager, GameObject dynamicObjects, GameObject boardObjects)
         {
+            this.playerPosition = playerPosition;
             this.loaderScript = loader;
             this.gameManager = gameManager;
             this.boardManager = boardManager;
@@ -35,6 +41,32 @@ namespace Completed
             boardManager = gameManager.GetComponent<BoardManager>();
             dynamicObjects = boardManager.DynamicObjectsHolder;
             boardObjects = boardManager.BoardHolder;*/
+        }
+
+        public GameState(GameState state, GameStateData data)
+        {
+            this.playerPosition = state.PlayerPosition;
+            this.loaderScript = state.LoaderScript;
+            this.gameManager = state.GameManager;
+            this.boardManager = state.BoardManagerScript;
+            this.dynamicObjects = state.DynamicObjects;
+            this.boardObjects = state.BoardObjects;
+            this.stateData = data;
+        }
+
+        public List<string> GetLegalActions()
+        {
+            Tuple<int, int> playerPos = Tuple.Create((int) this.playerPosition.x, (int) this.playerPosition.y);
+            return AgentRules.GetLegalActions(playerPos, this.stateData);
+        }
+
+        public GameState GenerateSuccessor(string action)
+        {
+            Tuple<int, int> playerPos = Tuple.Create((int) this.playerPosition.x, (int) this.playerPosition.y);
+            GameStateData stateData = new GameStateData(this.stateData);
+            // Change state data according to the move
+            GameState successorState = AgentRules.ApplyAction(playerPos, this, stateData, action);
+            // Check death and decrease food (Get food/health of the player from Player.cs) 
         }
 
         private void LoadMapObjects()
@@ -159,6 +191,34 @@ namespace Completed
             return state;
         }
 
-        
+        public List<Tuple<int, int>> GetFloor()
+        {
+            return stateData.FloorLoc;
+        }
+
+        public List<Tuple<int, int>> GetFood()
+        {
+            return stateData.FoodLoc;
+        }
+
+        public List<Tuple<int, int>> GetSoda()
+        {
+            return stateData.SodaLoc;
+        }
+
+        public List<Tuple<int, int>> GetEnemies()
+        {
+            return stateData.EnemiesLoc;
+        }
+
+        public List<Tuple<int, int>> GetBreakableWalls()
+        {
+            return stateData.BreakableWallsLoc;
+        }
+
+        public Tuple<int, int> GetExitLoc()
+        {
+            return stateData.ExitLoc;
+        }
     }
 }

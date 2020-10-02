@@ -57,6 +57,7 @@ namespace Completed
 
             // Get the list of floor locations
             List<Tuple<int, int>> floorLoc = stateData.FloorLoc;
+            List<Tuple<int, int>> breakableWallsLoc = stateData.BreakableWallsLoc;
             // List of floor location for moving in each direction
             List<Tuple<string, Tuple<int, int>>> successorFloorLoc = new List<Tuple<string, Tuple<int, int>>>();
             List<string> legalDirections = new List<string>();
@@ -68,11 +69,20 @@ namespace Completed
                 int y = directionList[i].Item2.Item2 + playerY;
                 successorFloorLoc.Add(Tuple.Create(directionList[i].Item1, Tuple.Create(x, y)));
             }
-            // If the action leading to next position is a floor (i.e. moveable gameobject), then add that
-            // direction to the list of legal directions.
+            // If the action leading to next position is not a floor (i.e. moveable gameobject), then remove
+            // that direction from the list of successor locations.
             for(int i = 0; i < successorFloorLoc.Count; i++)
             {
-                if(floorLoc.Contains(successorFloorLoc[i].Item2))
+                if(!floorLoc.Contains(successorFloorLoc[i].Item2))
+                {
+                    successorFloorLoc.RemoveAt(i);
+                }
+            }
+            // If the action leading to next position does not have a breakable wall (i.e. moveable gameobject)
+            // then add that direction to the list of legal directions.
+            for(int i = 0; i < successorFloorLoc.Count; i++)
+            {
+                if(!breakableWallsLoc.Contains(successorFloorLoc[i].Item2))
                 {
                     legalDirections.Add(successorFloorLoc[i].Item1);
                 }

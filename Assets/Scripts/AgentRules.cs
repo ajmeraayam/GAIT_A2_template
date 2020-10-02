@@ -13,9 +13,13 @@ namespace Completed
             return Actions.GetPossibleActions(playerPos, stateData);
         }
 
-        public static void ApplyAction(GameStateData stateData, string action)
+        public static GameState ApplyAction(Tuple<int, int> playerPos, GameState state, GameStateData stateData, string action)
         {
-
+            List<string> legal = GetLegalActions(playerPos, stateData);
+            Tuple<int, int> successorPlayerLoc = Actions.GetSuccessor(playerPos, action);
+            stateData.UpdateStateData(successorPlayerLoc);
+            GameState successorState = new GameState(state, stateData);
+            return successorState;
         }
     }
 }

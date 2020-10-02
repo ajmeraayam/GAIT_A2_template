@@ -31,15 +31,39 @@ namespace Completed
             this.enemiesLoc = enemiesLoc;
         }
 
-        public GameStateData DeepCopy()
+        // Copy Constructor
+        public GameStateData(GameStateData stateData)
+        {
+            this.floorLoc = new List<Tuple<int, int>>(stateData.FloorLoc);
+            this.foodLoc = new List<Tuple<int, int>>(stateData.FoodLoc);
+            this.sodaLoc = new List<Tuple<int, int>>(stateData.SodaLoc);
+            this.breakableWallsLoc = new List<Tuple<int, int>>(stateData.BreakableWallsLoc);
+            this.exitLoc = Tuple.Create(stateData.ExitLoc.Item1, stateData.ExitLoc.Item2);
+            this.enemiesLoc = new List<Tuple<int, int>>(stateData.EnemiesLoc);
+        }
+
+        /*public GameStateData DeepCopy()
         {
             List<Tuple<int, int>> floor = new List<Tuple<int, int>>(this.floorLoc);
             List<Tuple<int, int>> food = new List<Tuple<int, int>>(this.foodLoc);
             List<Tuple<int, int>> soda = new List<Tuple<int, int>>(this.sodaLoc);
             List<Tuple<int, int>> breakableWalls = new List<Tuple<int, int>>(this.breakableWallsLoc);
             List<Tuple<int, int>> enemies = new List<Tuple<int, int>>(this.enemiesLoc);
-            GameStateData state = new GameStateData(floor, food, sodaLoc, breakableWalls, enemies, this.exitLoc);
+            Tuple<int, int> exit = Tuple.Create(this.exitLoc.Item1, this.exitLoc.Item2);
+            GameStateData state = new GameStateData(floor, food, sodaLoc, breakableWalls, enemies, exit);
             return state;
+        }*/
+
+        public void UpdateStateData(Tuple<int, int> playerPos)
+        {
+            if(this.foodLoc.Contains(playerPos))
+            {
+                this.foodLoc.Remove(playerPos);
+            }
+            if(this.sodaLoc.Contains(playerPos))
+            {
+                this.sodaLoc.Remove(playerPos);
+            }
         }
 
         /*public static bool Compare(GameStateData data1, GameStateData data2)
