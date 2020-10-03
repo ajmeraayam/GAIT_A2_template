@@ -15,8 +15,9 @@ namespace Completed
 
         public static GameState ApplyAction(Tuple<int, int> playerPos, GameState state, GameStateData stateData, string action)
         {
-            List<string> legal = GetLegalActions(playerPos, stateData);
+            //List<string> legal = GetLegalActions(playerPos, stateData);
             Tuple<int, int> successorPlayerLoc = Actions.GetSuccessor(playerPos, action);
+            // Updates the food list, soda list and health left for the player according to their position
             stateData.UpdateStateData(successorPlayerLoc);
             GameState successorState = new GameState(state, stateData);
             return successorState;

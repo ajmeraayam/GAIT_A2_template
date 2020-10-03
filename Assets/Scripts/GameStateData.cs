@@ -4,12 +4,15 @@ using UnityEngine;
 namespace Completed
 {
     using System;
+    using System.Linq;
     using System.Collections.Generic;
 
     public class GameStateData
     {
         private List<Tuple<int, int>> floorLoc;
         public List<Tuple<int, int>> FloorLoc { get { return floorLoc; } }
+        private int healthLeft;
+        public int HealthLeft { get { return healthLeft; } }
         private List<Tuple<int, int>> foodLoc;
         public List<Tuple<int, int>> FoodLoc { get { return foodLoc; } }
         private List<Tuple<int, int>> sodaLoc;
@@ -21,7 +24,7 @@ namespace Completed
         private List<Tuple<int, int>> enemiesLoc;
         public List<Tuple<int, int>> EnemiesLoc { get { return enemiesLoc; } }
 
-        public GameStateData(List<Tuple<int, int>> floorLoc, List<Tuple<int, int>> foodLoc, List<Tuple<int, int>> sodaLoc, List<Tuple<int, int>> breakableWallsLoc, List<Tuple<int, int>> enemiesLoc, Tuple<int, int> exitLoc)
+        public GameStateData(List<Tuple<int, int>> floorLoc, List<Tuple<int, int>> foodLoc, List<Tuple<int, int>> sodaLoc, List<Tuple<int, int>> breakableWallsLoc, List<Tuple<int, int>> enemiesLoc, Tuple<int, int> exitLoc, int healthLeft)
         {
             this.floorLoc = floorLoc;
             this.foodLoc = foodLoc;
@@ -29,6 +32,7 @@ namespace Completed
             this.breakableWallsLoc = breakableWallsLoc;
             this.exitLoc = exitLoc;
             this.enemiesLoc = enemiesLoc;
+            this.healthLeft = healthLeft;
         }
 
         // Copy Constructor
@@ -40,6 +44,7 @@ namespace Completed
             this.breakableWallsLoc = new List<Tuple<int, int>>(stateData.BreakableWallsLoc);
             this.exitLoc = Tuple.Create(stateData.ExitLoc.Item1, stateData.ExitLoc.Item2);
             this.enemiesLoc = new List<Tuple<int, int>>(stateData.EnemiesLoc);
+            this.healthLeft = stateData.HealthLeft;
         }
 
         /*public GameStateData DeepCopy()
@@ -64,24 +69,26 @@ namespace Completed
             {
                 this.sodaLoc.Remove(playerPos);
             }
+            this.healthLeft--;
         }
 
-        /*public static bool Compare(GameStateData data1, GameStateData data2)
+        public override bool Equals(object obj)
         {
-            if(data1 == null || data2 == null)
+            return this.Equals(obj as GameStateData);
+        }
+
+        private bool Equals(GameStateData other)
+        {
+            if(this.foodLoc.Count != other.FoodLoc.Count || !this.foodLoc.Except(other.FoodLoc).ToList().Any())
                 return false;
-            if(!data1.FoodLoc.Except(data2.FoodLoc).ToList().Any())
+            if(this.sodaLoc.Count != other.SodaLoc.Count || !this.sodaLoc.Except(other.SodaLoc).ToList().Any())
                 return false;
-            if(!data1.SodaLoc.Except(data2.SodaLoc).ToList().Any())
+            if(this.breakableWallsLoc.Count != other.BreakableWallsLoc.Count || !this.breakableWallsLoc.Except(other.BreakableWallsLoc).ToList().Any())
                 return false;
-            if(!data1.BreakableWallsLoc.Except(data2.BreakableWallsLoc).ToList().Any())
-                return false;
-            if(!data1.EnemiesLoc.Except(data2.EnemiesLoc).ToList().Any())
-                return false;
-            if(!data1.BreakableWallsLoc.Except(data2.BreakableWallsLoc).ToList().Any())
+            if(this.enemiesLoc.Count != other.EnemiesLoc.Count || !this.enemiesLoc.Except(other.EnemiesLoc).ToList().Any())
                 return false;
             
             return true;
-        }*/
+        }
     }
 }

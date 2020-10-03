@@ -10,6 +10,8 @@ namespace Completed
     {
         private Vector3 playerPosition;
         public Vector3 PlayerPosition { get { return playerPosition; } }
+        private Player playerScript;
+        public Player PlayerScript { get { return playerScript; } }
         // Loader instance
         private Loader loaderScript;
         public Loader LoaderScript { get{ return loaderScript; } }
@@ -26,10 +28,12 @@ namespace Completed
         private GameObject boardObjects;
         public GameObject BoardObjects { get{ return boardObjects; } }
         private GameStateData stateData;
+        public GameStateData StateData { get{ return stateData; } }
 
-        public GameState(Vector3 playerPosition, Loader loader, GameObject gameManager, BoardManager boardManager, GameObject dynamicObjects, GameObject boardObjects)
+        public GameState(Player playerScript, Loader loader, GameObject gameManager, BoardManager boardManager, GameObject dynamicObjects, GameObject boardObjects)
         {
-            this.playerPosition = playerPosition;
+            this.playerScript = playerScript;
+            this.playerPosition = this.playerScript.gameObject.transform.position;
             this.loaderScript = loader;
             this.gameManager = gameManager;
             this.boardManager = boardManager;
@@ -45,6 +49,7 @@ namespace Completed
 
         public GameState(GameState state, GameStateData data)
         {
+            this.playerScript = state.PlayerScript;
             this.playerPosition = state.PlayerPosition;
             this.loaderScript = state.LoaderScript;
             this.gameManager = state.GameManager;
@@ -64,9 +69,12 @@ namespace Completed
         {
             Tuple<int, int> playerPos = Tuple.Create((int) this.playerPosition.x, (int) this.playerPosition.y);
             GameStateData stateData = new GameStateData(this.stateData);
-            // Change state data according to the move
+            // Applies the action to the player (doesn't change the physical position of player in the game).
+            // Takes the action, generates the successor position for the player (i.e. next position)
+            // Then makes updates to the game state data according to the position (i.e. reduce health, 
+            // remove food or soda if there were any, at that given position)
             GameState successorState = AgentRules.ApplyAction(playerPos, this, stateData, action);
-            // Check death and decrease food (Get food/health of the player from Player.cs) 
+            return successorState;
         }
 
         private void LoadMapObjects()
@@ -81,8 +89,9 @@ namespace Completed
             List<Tuple<int, int>> breakableWallsList = LoadBreakableWallLocations(childDynamicObjects);
             List<Tuple<int, int>> enemiesList = LoadEnemyLocations(childDynamicObjects);
             Tuple<int, int> exit = LoadExitLocation(childDynamicObjects);
+            int health = this.playerScript.food;
 
-            stateData = new GameStateData(floorList, foodList, sodaList, breakableWallsList, enemiesList, exit);
+            stateData = new GameStateData(floorList, foodList, sodaList, breakableWallsList, enemiesList, exit, health);
         }
 
         private List<Tuple<int, int>> LoadFloorLocations(GameObject[] childBoardObjects)
@@ -187,7 +196,7 @@ namespace Completed
 
         public GameState DeepCopy()
         {
-            GameState state = new GameState(this.loaderScript, this.gameManager, this.boardManager, this.dynamicObjects, this.boardObjects);
+            GameState state = new GameState(this.playerScript, this.loaderScript, this.gameManager, this.boardManager, this.dynamicObjects, this.boardObjects);
             return state;
         }
 
@@ -219,6 +228,40 @@ namespace Completed
         public Tuple<int, int> GetExitLoc()
         {
             return stateData.ExitLoc;
+        }
+
+        public int GetHealthLeft()
+        {
+            return stateData.HealthLeft;
+        }
+
+        public Tuple<int, int> GetPlayerPosition()
+        {
+            return Tuple.Create((int) this.playerPosition.x, (int) this.playerPosition.y);
+        }
+
+        public int NumEnemies()
+        {
+            return stateData.EnemiesLoc.Count;
+        }
+
+        public bool IsOver()
+        {
+            Tuple<int, int> pos = Tuple.Create((int) this.playerPosition.x, (int) this.playerPosition.y);
+            return (stateData.ExitLoc == pos);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj as GameState);
+        }
+
+        private bool Equals(GameState other)
+        {
+            if(this.stateData.Equals(other.StateData))
+                return true;
+            else
+                return false;
         }
     }
 }
