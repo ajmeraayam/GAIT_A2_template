@@ -10,6 +10,7 @@ namespace Completed
     {
         private Vector3 playerPosition;
         public Vector3 PlayerPosition { get { return playerPosition; } }
+        private Tuple<int, int> playerPos;
         private Player playerScript;
         public Player PlayerScript { get { return playerScript; } }
         // Loader instance
@@ -34,6 +35,7 @@ namespace Completed
         {
             this.playerScript = playerScript;
             this.playerPosition = this.playerScript.gameObject.transform.position;
+            this.playerPos = Tuple.Create((int) this.playerPosition.x, (int) this.playerPosition.y);
             this.loaderScript = loader;
             this.gameManager = gameManager;
             this.boardManager = boardManager;
@@ -61,13 +63,11 @@ namespace Completed
 
         public List<string> GetLegalActions()
         {
-            Tuple<int, int> playerPos = Tuple.Create((int) this.playerPosition.x, (int) this.playerPosition.y);
             return AgentRules.GetLegalActions(playerPos, this.stateData);
         }
 
         public GameState GenerateSuccessor(string action)
         {
-            Tuple<int, int> playerPos = Tuple.Create((int) this.playerPosition.x, (int) this.playerPosition.y);
             GameStateData stateData = new GameStateData(this.stateData);
             // Applies the action to the player (doesn't change the physical position of player in the game).
             // Takes the action, generates the successor position for the player (i.e. next position)
@@ -262,6 +262,22 @@ namespace Completed
                 return true;
             else
                 return false;
+        }
+
+        public bool CheckEnemyOnCurrentLoc()
+        {
+            if(this.stateData.EnemiesLoc.Contains(this.playerPos))
+                return true;
+            else
+                return false;
+        }
+
+        public override int GetHashCode()
+        {
+            int hash = (int) this.playerPosition.x + (int) this.playerPosition.y;
+            hash *= 23;
+            hash += this.stateData.GetHashCode(); 
+            return hash;
         }
     }
 }

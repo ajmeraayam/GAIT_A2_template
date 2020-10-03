@@ -90,5 +90,21 @@ namespace Completed
             
             return true;
         }
+
+        public override int GetHashCode()
+        {
+            int hash = this.healthLeft;
+            if(this.enemiesLoc.Count != 0)
+            {
+                hash = (hash * 23) + this.enemiesLoc.Count;
+                foreach(Tuple<int, int> tup in this.enemiesLoc)
+                {
+                    hash *= 23;
+                    if(tup != null)
+                        hash += tup.GetHashCode();
+                }
+            }
+            return hash;
+        }
     }
 }
