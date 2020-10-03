@@ -154,7 +154,7 @@ namespace Completed
                 childNodes = this.parent_child_mapping[state];
             }
 
-            List<Tuple<GameState, float, int>> rewardList = new List<Tuple<GameState, float>>();
+            List<Tuple<GameState, float, int>> rewardList = new List<Tuple<GameState, float, int>>();
 
             foreach(GameState child in childNodes)
             {
