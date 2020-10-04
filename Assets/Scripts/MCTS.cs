@@ -62,12 +62,36 @@ namespace Completed
 
         private bool IsExpandable(GameState state, int depth)
         {
-            return false;
+            if(depth > this.depthThreshold)
+            {
+                return false;
+            }
+            else
+            {
+                if(this.parent_child_mapping.ContainsKey(state))
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
         }
 
         private List<GameState> ExpandNode(GameState state, int depth)
         {
-            return new List<GameState>();
+            List<GameState> childNodes = new List<GameState>();
+            List<string> actions = state.GetLegalActions();
+            actions.Remove("STOP");
+
+            foreach(string action in actions)
+            {
+                GameState successor = state.GenerateSuccessor(action);
+                childNodes.Add(successor);
+            }
+
+            return childNodes;
         }
 
         private void UpdateRewards(GameState state, float reward, int winReward)
