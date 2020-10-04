@@ -292,9 +292,189 @@ namespace Completed
             return Evaluate(prevGameState, gameState, depth);
         }
 
+        // Consider number of moves taken by player to expect an enemy move
         private float Evaluate(GameState prevGameState, GameState gameState, int depth)
         {
-            return 0f;
+            List<Tuple<int, int>> currentFoodList = gameState.GetFood();
+            List<Tuple<int, int>> prevFoodList = prevGameState.GetFood();
+            List<Tuple<int, int>> currentSodaList = gameState.GetSoda();
+            List<Tuple<int, int>> prevSodaList = prevGameState.GetSoda();
+            List<Tuple<int, int>> currentEnemiesList = gameState.GetEnemies();
+            List<Tuple<int, int>> prevEnemiesList = prevGameState.GetEnemies();
+
+            int currentClosestEnemyDist = GetClosestEnemyDistance(gameState);
+            int prevClosestEnemyDist = GetClosestEnemyDistance(prevGameState);
+            int prevClosestFoodDist = GetClosestFoodDistance(prevGameState);
+            int currentClosestFoodDist = GetClosestFoodDistance(gameState);
+            int prevClosestSodaDist = GetClosestSodaDistance(prevGameState);
+            int currentClosestSodaDist = GetClosestSodaDistance(gameState);
+            int prevDistToExit = GetDistanceToExit(prevGameState);
+            int currentDistToExit = GetDistanceToExit(gameState);
+
+            float reward = 0f;
+            // Consider empty enemy and food/soda list
+            // Negative reward if moving close to enemy, positive if moving away from enemy
+            if(currentClosestEnemyDist < 10000)
+                reward += ((currentClosestEnemyDist - prevClosestEnemyDist) / (currentClosestEnemyDist * (depth + 1)));
+
+            // If food is closer than soda (Case works for no soda remaining and only food remaining on board)
+            if(prevClosestFoodDist < prevClosestSodaDist)
+            {
+                // Give reward for moving closer to food over soda
+                // This means moving closer to food
+                if(currentClosestFoodDist < prevClosestFoodDist)
+                {
+                    reward += (prevClosestFoodDist - currentClosestFoodDist) / (prevClosestFoodDist * (depth + 1));
+                }
+                // Moving away from food
+                else
+                {
+                    // But moving close to soda
+                    if(prevClosestSodaDist > currentClosestSodaDist)
+                    {
+                        // Using similar reward to food reward but dividing it further by 2
+                        // because moving away from the closest food to move closer to soda is not very beneficial
+                        reward += (prevClosestSodaDist - currentClosestSodaDist) / (prevClosestSodaDist * (depth + 1) * 2);
+                    }
+                    else
+                    {
+                        reward += (prevClosestFoodDist - currentClosestFoodDist) / (prevClosestFoodDist * (depth + 1));
+                    }
+                }
+            }
+            // If soda is closer than food (Case works for no food remaining and only soda remaining on board)
+            else if(prevClosestFoodDist > prevClosestSodaDist)
+            {
+                // Give reward for moving closer to soda over food
+                // This means moving closer to soda
+                if(currentClosestSodaDist < prevClosestSodaDist)
+                {
+                    reward += 2 * ((prevClosestSodaDist - currentClosestSodaDist) / (prevClosestSodaDist * (depth + 1)));
+                }
+                // Moving away from soda
+                else
+                {
+                    // But moving close to food
+                    if(prevClosestFoodDist > currentClosestFoodDist)
+                    {
+                        // Using similar reward to soda reward but dividing it further by 2
+                        // because moving away from the closest soda to move closer to food is not very beneficial
+                        reward += (prevClosestFoodDist - currentClosestFoodDist) / (prevClosestFoodDist * (depth + 1) * 2);
+                    }
+                    else
+                    {
+                        reward += (prevClosestSodaDist - currentClosestSodaDist) / (prevClosestSodaDist * (depth + 1));
+                    }
+                }
+            }
+            // If both of them are on the board and at same distance
+            else if(prevClosestFoodDist == prevClosestSodaDist && prevClosestFoodDist < 10000)
+            {
+                // Give reward for moving closer to soda over food
+                // If moving into this state leads to eating soda
+                if(prevSodaList.Count > currentSodaList.Count)
+                {
+                    reward += 20f;
+                }
+                // If moving into this tate leads to eating food
+                else if(prevFoodList.Count > currentFoodList.Count)
+                {
+                    reward += 10f;
+                }
+                // If moving close to food
+                else if(currentClosestFoodDist < currentClosestSodaDist)
+                {
+                    reward += (prevClosestFoodDist - currentClosestFoodDist) / (prevClosestFoodDist * (depth + 1));
+                }
+                // If moving close to soda
+                else if(currentClosestFoodDist > currentClosestSodaDist)
+                {
+                    reward += 2 * ((prevClosestSodaDist - currentClosestSodaDist) / (prevClosestSodaDist * (depth + 1)));
+                }
+                // If distance remains same
+                else
+                {
+                    reward += 0;
+                }
+            }
+            // If no food or soda remaining on board
+            else if(prevClosestFoodDist == prevClosestSodaDist && prevClosestFoodDist == 10000)
+            {
+                // If moving closer or keeping same distance to exit
+                if(prevDistToExit >= currentDistToExit)
+                {
+                    reward += 1;
+                }
+                else
+                {
+                    reward += 0;
+                }
+            }
+
+            return reward;
+        }
+
+        private int GetClosestEnemyDistance(GameState state)
+        {
+            List<Tuple<int, int>> enemiesList = state.GetEnemies();
+            Tuple<int, int> playerPos = state.GetPlayerPosition();
+
+            int distance = 10000;
+            foreach(Tuple<int, int> enemy in enemiesList)
+            {
+                int dist = DistanceCalculator.ManhattanDistance(enemy, playerPos);
+                if(dist < distance)
+                {
+                    distance = dist;
+                }
+            }
+
+            return distance;
+        }
+
+        private int GetClosestFoodDistance(GameState state)
+        {
+            List<Tuple<int, int>> foodList = state.GetFood();
+            Tuple<int, int> playerPos = state.GetPlayerPosition();
+
+            int distance = 10000;
+            foreach(Tuple<int, int> food in foodList)
+            {
+                int dist = DistanceCalculator.ManhattanDistance(food, playerPos);
+                if(dist < distance)
+                {
+                    distance = dist;
+                }
+            }
+
+            return distance;
+        }
+
+        private int GetClosestSodaDistance(GameState state)
+        {
+            List<Tuple<int, int>> sodaList = state.GetSoda();
+            Tuple<int, int> playerPos = state.GetPlayerPosition();
+
+            int distance = 10000;
+            foreach(Tuple<int, int> soda in sodaList)
+            {
+                int dist = DistanceCalculator.ManhattanDistance(soda, playerPos);
+                if(dist < distance)
+                {
+                    distance = dist;
+                }
+            }
+
+            return distance;
+        }
+
+        private int GetDistanceToExit(GameState state)
+        {
+            Tuple<int, int> exit = state.GetExitLoc();
+            Tuple<int, int> playerPos = state.GetPlayerPosition();
+
+            return DistanceCalculator.ManhattanDistance(exit, playerPos);
+
         }
     }
 }
