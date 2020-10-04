@@ -9,11 +9,12 @@ namespace Completed
 
     public class MCTS
     {
-        Dictionary<Tuple<int, int>, Tuple<float, int>> cumulativeReward;
-        Dictionary<Tuple<int, int>, Tuple<float, int>> meanReward;
-        Dictionary<Tuple<int, int>, int> visitCount;
-        Dictionary<GameState, List<GameState>> parent_child_mapping;
+        private Dictionary<Tuple<int, int>, Tuple<float, int>> cumulativeReward;
+        private Dictionary<Tuple<int, int>, Tuple<float, int>> meanReward;
+        private Dictionary<Tuple<int, int>, int> visitCount;
+        private Dictionary<GameState, List<GameState>> parent_child_mapping;
         private int depthThreshold;
+        private float exploration_threshold;
 
         public MCTS()
         {
@@ -22,6 +23,7 @@ namespace Completed
             visitCount = new Dictionary<Tuple<int, int>, int>();
             parent_child_mapping = new Dictionary<GameState, List<GameState>>();
             depthThreshold = 15;
+            exploration_threshold = (float) Math.Sqrt(2);
         }
 
         private Tuple<GameState, float, int> TreeSim(GameState state, int depth)
@@ -145,7 +147,47 @@ namespace Completed
 
         private float CalculateUCT(GameState state, GameState child, int depth)
         {
-            return 0f;
+            float reward_cumulative = 0f;
+            int win_cumulative = 0;
+            float reward_mean = 0f;
+            int win_mean = 0;
+            
+            int ni = 0;
+            int np = this.visitCount[state.GetPlayerPosition()];
+
+            Tuple<int, int> currentPos = child.GetPlayerPosition();
+            if(this.cumulativeReward.ContainsKey(currentPos))
+            {
+                Tuple<float, int> cumulativeRew = this.cumulativeReward[currentPos];
+                reward_cumulative = cumulativeRew.Item1;
+                win_cumulative = cumulativeRew.Item2;
+            }
+
+            if(this.meanReward.ContainsKey(currentPos))
+            {
+                Tuple<float, int> meanRew = this.meanReward[currentPos];
+                reward_mean = meanRew.Item1;
+                win_mean = meanRew.Item2;
+            }
+
+            if(this.visitCount.ContainsKey(currentPos))
+            {
+                ni = this.visitCount[currentPos];
+            }
+
+            float vi = reward_mean;
+            float uct = 0;
+
+            if(ni == 0)
+            {
+                uct = float.PositiveInfinity;
+            }
+            else
+            {
+                uct = vi + this.exploration_threshold * (float) Math.Sqrt((float) Math.Log(np) / ni);
+            }
+
+            return uct;
         }
 
         private Tuple<GameState, float, int> Playout(GameState state, int depth)
