@@ -70,7 +70,40 @@ namespace Completed
 
         private void UpdateRewards(GameState state, float reward, int winReward)
         {
+            float reward_cumulative = 0f;
+            int win_cumulative = 0;
+            float reward_mean = 0f;
+            int win_mean = 0;
+            
+            Tuple<int, int> currentPos = state.GetPlayerPosition();
+            if(this.cumulativeReward.ContainsKey(currentPos))
+            {
+                Tuple<float, int> cumulativeRew = this.cumulativeReward[currentPos];
+                reward_cumulative = cumulativeRew.Item1;
+                win_cumulative = cumulativeRew.Item2;
+            }
 
+            if(this.meanReward.ContainsKey(currentPos))
+            {
+                Tuple<float, int> meanRew = this.meanReward[currentPos];
+                reward_mean = meanRew.Item1;
+                win_mean = meanRew.Item2;
+            }
+            
+            int visit = 0;
+            if(this.visitCount.ContainsKey(currentPos))
+            {
+                visit = this.visitCount[currentPos];
+            }
+            visit++;
+
+            reward_cumulative += reward;
+            reward_mean = reward_cumulative / visit;
+            win_cumulative = winReward;
+            win_mean = win_cumulative;
+
+            this.cumulativeReward[currentPos] = Tuple.Create(reward_cumulative, win_cumulative);
+            this.meanReward[currentPos] = Tuple.Create(reward_mean, win_mean);
         }
 
         private GameState Select_child(GameState state, int depth)
