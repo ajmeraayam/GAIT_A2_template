@@ -15,6 +15,7 @@ namespace Completed
         private Dictionary<GameState, List<GameState>> parent_child_mapping;
         private int depthThreshold;
         private float exploration_threshold;
+        private int training_threshold;
 
         public MCTS()
         {
@@ -24,6 +25,36 @@ namespace Completed
             parent_child_mapping = new Dictionary<GameState, List<GameState>>();
             depthThreshold = 15;
             exploration_threshold = (float) Math.Sqrt(2);
+            training_threshold = 20;
+        }
+
+        public string TrainTree(GameState state)
+        {
+            int iter = 0;
+            while(iter < this.training_threshold)
+            {
+                this.TreeSim(state, 0);
+                iter++;
+            }
+
+            List<GameState> children = this.parent_child_mapping[state];
+            List<Tuple<GameState, float, int>> childRewardList = new List<Tuple<GameState, float, int>>();
+
+            foreach(GameState child in children)
+            {
+                Tuple<int, int> child_loc = child.GetPlayerPosition();
+                Tuple<float, int> child_reward = this.meanReward[child_loc];
+                childRewardList.Add(Tuple.Create(child, child_reward.Item1, child_reward.Item2));
+            }
+            // Sort the reward list by win reward and if same win reward, then sort by reward
+            // Sorted in descending order
+            childRewardList.Sort((x, y) => {
+                int result = y.Item3.CompareTo(x.Item3);
+                return result == 0 ? y.Item2.CompareTo(x.Item2) : result; 
+            });
+
+            GameState selected_child = childRewardList[0].Item1;
+            return Actions.GetDirectionFromStates(state, selected_child);
         }
 
         private Tuple<GameState, float, int> TreeSim(GameState state, int depth)

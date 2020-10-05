@@ -89,6 +89,28 @@ namespace Completed
             }
 
             return legalDirections;
-        }   
+        } 
+
+        public static string GetDirectionFromStates(GameState state, GameState child)
+        {
+            Tuple<int, int> currentPos = state.GetPlayerPosition();
+            Tuple<int, int> nextPos = child.GetPlayerPosition();
+
+            Tuple<int, int> diffTup = Tuple.Create((nextPos.Item1 - currentPos.Item1), (nextPos.Item2 - currentPos.Item2));
+
+            if(diffTup.Item1 == 0)
+            {
+                if(diffTup.Item2 == 0)
+                    return "STOP";
+                else if(diffTup.Item2 > 0)
+                    return "NORTH";
+                else
+                    return "SOUTH";
+            }
+            else if(diffTup.Item1 > 0)
+                return "EAST";
+            else
+                return "WEST";
+        }  
     }
 }
