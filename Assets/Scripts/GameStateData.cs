@@ -72,12 +72,26 @@ namespace Completed
             this.healthLeft--;
         }
 
-        public override bool Equals(object obj)
+        /*public override bool Equals(object obj)
         {
             return this.Equals(obj as GameStateData);
         }
 
-        private bool Equals(GameStateData other)
+        public bool Equals(GameStateData other)
+        {
+            if(this.foodLoc.Count != other.FoodLoc.Count || !this.foodLoc.Except(other.FoodLoc).ToList().Any())
+                return false;
+            if(this.sodaLoc.Count != other.SodaLoc.Count || !this.sodaLoc.Except(other.SodaLoc).ToList().Any())
+                return false;
+            if(this.breakableWallsLoc.Count != other.BreakableWallsLoc.Count || !this.breakableWallsLoc.Except(other.BreakableWallsLoc).ToList().Any())
+                return false;
+            if(this.enemiesLoc.Count != other.EnemiesLoc.Count || !this.enemiesLoc.Except(other.EnemiesLoc).ToList().Any())
+                return false;
+            
+            return true;
+        }*/
+
+        public bool CompareData(GameStateData other)
         {
             if(this.foodLoc.Count != other.FoodLoc.Count || !this.foodLoc.Except(other.FoodLoc).ToList().Any())
                 return false;
@@ -91,7 +105,7 @@ namespace Completed
             return true;
         }
 
-        public override int GetHashCode()
+        /*public override int GetHashCode()
         {
             int hash = this.healthLeft;
             if(this.enemiesLoc.Count != 0)
@@ -106,5 +120,10 @@ namespace Completed
             }
             return hash;
         }
+
+        public override int GetHashCode()
+        {
+            return 1;
+        }*/
     }
 }

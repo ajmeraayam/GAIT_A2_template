@@ -19,7 +19,7 @@ namespace Completed
             Tuple<int, int> successorPlayerLoc = Actions.GetSuccessor(playerPos, action);
             // Updates the food list, soda list and health left for the player according to their position
             stateData.UpdateStateData(successorPlayerLoc);
-            GameState successorState = new GameState(state, stateData);
+            GameState successorState = new GameState(state, stateData, successorPlayerLoc);
             return successorState;
         }
     }

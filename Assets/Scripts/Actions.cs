@@ -63,21 +63,18 @@ namespace Completed
             List<string> legalDirections = new List<string>();
             
             // Adding direction vector to current player position
+            // If the action leading to next position is not a floor (i.e. moveable gameobject), then remove
+            // that direction from the list of successor locations.
             for(int i = 0; i < directionList.Count; i++)
             {
                 int x = directionList[i].Item2.Item1 + playerX;
                 int y = directionList[i].Item2.Item2 + playerY;
-                successorFloorLoc.Add(Tuple.Create(directionList[i].Item1, Tuple.Create(x, y)));
-            }
-            // If the action leading to next position is not a floor (i.e. moveable gameobject), then remove
-            // that direction from the list of successor locations.
-            for(int i = 0; i < successorFloorLoc.Count; i++)
-            {
-                if(!floorLoc.Contains(successorFloorLoc[i].Item2))
+                if(floorLoc.Contains(Tuple.Create(x, y)))
                 {
-                    successorFloorLoc.RemoveAt(i);
+                    successorFloorLoc.Add(Tuple.Create(directionList[i].Item1, Tuple.Create(x, y)));
                 }
             }
+            
             // If the action leading to next position does not have a breakable wall (i.e. moveable gameobject)
             // then add that direction to the list of legal directions.
             for(int i = 0; i < successorFloorLoc.Count; i++)

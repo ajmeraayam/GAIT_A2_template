@@ -42,17 +42,13 @@ namespace Completed
             this.dynamicObjects = dynamicObjects;
             this.boardObjects = boardObjects;
             LoadMapObjects();
-            /*loaderScript = GameObject.Find("Main Camera").GetComponent<Loader>();
-            gameManager = loaderScript.gameManager;
-            boardManager = gameManager.GetComponent<BoardManager>();
-            dynamicObjects = boardManager.DynamicObjectsHolder;
-            boardObjects = boardManager.BoardHolder;*/
         }
 
-        public GameState(GameState state, GameStateData data)
+        public GameState(GameState state, GameStateData data, Tuple<int, int> playerPosition)
         {
             this.playerScript = state.PlayerScript;
-            this.playerPosition = state.PlayerPosition;
+            this.playerPos = playerPosition;
+            this.playerPosition = new Vector3((float) playerPos.Item1, (float) playerPos.Item2, 0f);
             this.loaderScript = state.LoaderScript;
             this.gameManager = state.GameManager;
             this.boardManager = state.BoardManagerScript;
@@ -79,9 +75,21 @@ namespace Completed
 
         private void LoadMapObjects()
         {
-            GameObject[] childBoardObjects = boardObjects.GetComponentsInChildren<GameObject>();
-            GameObject[] childDynamicObjects = dynamicObjects.GetComponentsInChildren<GameObject>();
+            Transform[] childBoardTransforms = boardObjects.GetComponentsInChildren<Transform>(true);
+            Transform[] childDynamicTransforms = dynamicObjects.GetComponentsInChildren<Transform>(true);
             
+            GameObject[] childBoardObjects = new GameObject[childBoardTransforms.Length];
+            for(int i = 0; i < childBoardTransforms.Length; i++)
+            {
+                childBoardObjects[i] = childBoardTransforms[i].gameObject;
+            }
+
+            GameObject[] childDynamicObjects = new GameObject[childDynamicTransforms.Length];
+            for(int i = 0; i < childDynamicTransforms.Length; i++)
+            {
+                childDynamicObjects[i] = childDynamicTransforms[i].gameObject;
+            }
+
             // Load all the gameobjects positions
             List<Tuple<int, int>> floorList = LoadFloorLocations(childBoardObjects);
             List<Tuple<int, int>> foodList = LoadFoodLocations(childDynamicObjects);
@@ -237,7 +245,7 @@ namespace Completed
 
         public Tuple<int, int> GetPlayerPosition()
         {
-            return Tuple.Create((int) this.playerPosition.x, (int) this.playerPosition.y);
+            return this.playerPos;
         }
 
         public int NumEnemies()
@@ -251,18 +259,18 @@ namespace Completed
             return (stateData.ExitLoc == pos);
         }
 
-        public override bool Equals(object obj)
+        /*public override bool Equals(object obj)
         {
             return this.Equals(obj as GameState);
         }
 
-        private bool Equals(GameState other)
+        public bool Equals(GameState other)
         {
-            if(this.stateData.Equals(other.StateData))
+            if(this.stateData.Equals(other.StateData) && this.playerPos == other.playerPos)
                 return true;
             else
                 return false;
-        }
+        }*/
 
         public bool CheckEnemyOnCurrentLoc()
         {
@@ -272,12 +280,21 @@ namespace Completed
                 return false;
         }
 
-        public override int GetHashCode()
+        /*public override int GetHashCode()
         {
             int hash = (int) this.playerPosition.x + (int) this.playerPosition.y;
             hash *= 23;
             hash += this.stateData.GetHashCode(); 
             return hash;
+        }
+        public override int GetHashCode()
+        {
+            return 1;
+        }*/
+
+        public bool CompareStateData(GameState other)
+        {
+            return this.stateData.CompareData(other.StateData);
         }
     }
 }
