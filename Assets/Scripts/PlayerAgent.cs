@@ -138,11 +138,26 @@ namespace Completed
                     print("Starting training");
                     
                     int iter = 0;
+                    float sleepTime = 1f / this.mcts.training_threshold;
                     while(iter < this.mcts.training_threshold)
                     {
                         this.mcts.RunNextTrainingIteration(gameState);
                         iter++;
-                        yield return new WaitForSeconds(0.033f);
+                        yield return new WaitForSeconds(sleepTime);
+                    }
+
+                    print("Current position - " + gameState.GetPlayerPosition());
+
+                    List<Tuple<GameState, Tuple<float, int>>> successorRewards = this.mcts.SuccessorMeanRewards(gameState);
+                    foreach(Tuple<GameState, Tuple<float, int>> tup in successorRewards)
+                    {
+                        print("Position - " + tup.Item1.GetPlayerPosition() + " Reward - " + tup.Item2);
+                    }
+
+                    List<Tuple<GameState, Tuple<float, int>>> successorCumulativeRewards = this.mcts.SuccessorCumulativeRewards(gameState);
+                    foreach(Tuple<GameState, Tuple<float, int>> tup in successorCumulativeRewards)
+                    {
+                        print("Position - " + tup.Item1.GetPlayerPosition() + " Cumulative Reward - " + tup.Item2);
                     }
 
                     string direction = "";

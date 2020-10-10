@@ -25,10 +25,10 @@ namespace Completed
             meanReward = new Dictionary<Tuple<int, int>, Tuple<float, int>>(new CustomTupleComparer());
             visitCount = new Dictionary<Tuple<int, int>, int>(new CustomTupleComparer());
             parent_child_mapping = new Dictionary<GameState, List<GameState>>(new CustomComparer());
-            depthThreshold = 15;
-            exploration_threshold = (float) Math.Sqrt(2);
-            training_threshold = 30;
-            playout_threshold = 5;
+            depthThreshold = 5;
+            exploration_threshold = 10f;
+            training_threshold = 15;
+            playout_threshold = 1;              // 5
             processing = false;
         }
         
@@ -45,7 +45,8 @@ namespace Completed
             foreach(GameState child in children)
             {
                 Tuple<int, int> child_loc = child.GetPlayerPosition();
-                Tuple<float, int> child_reward = this.meanReward[child_loc];
+                //Tuple<float, int> child_reward = this.meanReward[child_loc];
+                Tuple<float, int> child_reward = this.cumulativeReward[child_loc];
                 childRewardList.Add(Tuple.Create(child, child_reward.Item1, child_reward.Item2));
             }
             // Sort the reward list by win reward and if same win reward, then sort by reward
@@ -58,37 +59,6 @@ namespace Completed
             GameState selected_child = childRewardList[0].Item1;
             return Actions.GetDirectionFromStates(state, selected_child);
         }
-
-        /*public void TrainTree(GameState state)
-        {
-            this.processing = true;
-            int iter = 0;
-            while(iter < this.training_threshold)
-            {
-                this.TreeSim(state, 0);
-                iter++;
-            }
-
-            List<GameState> children = this.parent_child_mapping[state];
-            List<Tuple<GameState, float, int>> childRewardList = new List<Tuple<GameState, float, int>>();
-
-            foreach(GameState child in children)
-            {
-                Tuple<int, int> child_loc = child.GetPlayerPosition();
-                Tuple<float, int> child_reward = this.meanReward[child_loc];
-                childRewardList.Add(Tuple.Create(child, child_reward.Item1, child_reward.Item2));
-            }
-            // Sort the reward list by win reward and if same win reward, then sort by reward
-            // Sorted in descending order
-            childRewardList.Sort((x, y) => {
-                int result = y.Item3.CompareTo(x.Item3);
-                return result == 0 ? y.Item2.CompareTo(x.Item2) : result; 
-            });
-
-            GameState selected_child = childRewardList[0].Item1;
-            this.next_direction = Actions.GetDirectionFromStates(state, selected_child);
-            this.processing = false;
-        }*/
 
         private Tuple<GameState, float, int> TreeSim(GameState state, int depth)
         {
@@ -109,7 +79,7 @@ namespace Completed
             {
                 // Check the win condition as well
                 GameState childState = this.Select_child(state, depth);
-                if(childState.CheckEnemyOnCurrentLoc())
+                if(childState.CheckEnemyOnCurrentLoc() || childState.IsOver())
                 {
                     Tuple<GameState, float, int> child = this.Playout(state, depth);
                     this.UpdateRewards(state, child.Item2, child.Item3);
@@ -292,9 +262,12 @@ namespace Completed
                 Tuple<GameState, float, int> selectedState = this.PlayoutSim(nextState, depth + playoutDepth);
                 if(playoutDepth == 0)
                     child = selectedState.Item1;
+
                 nextState = selectedState.Item1;
                 reward += selectedState.Item2;
                 playoutDepth++;
+                if(nextState.IsOver() || nextState.CheckEnemyOnCurrentLoc())
+                    break;
             }
             int winReward = 0;
 
@@ -303,7 +276,8 @@ namespace Completed
             else if(nextState.IsOver())
                 winReward = 1;
             
-            reward /= playoutDepth;
+            if(playoutDepth > 0)
+                reward /= playoutDepth;
 
             return Tuple.Create(child, reward, winReward);
         }
@@ -326,15 +300,19 @@ namespace Completed
             {
                 if(child.CheckEnemyOnCurrentLoc())
                 {
-                    rewardList.Add(Tuple.Create(child, -10000f, -1));
-                    continue;
+                    float rew = (-30.01f) / (depth + 1);
+                    rewardList.Add(Tuple.Create(child, rew, -1));
                 }
-                if(child.IsOver())
+                else if(child.IsOver())
                 {
-                    rewardList.Add(Tuple.Create(child, 10000f, 1));
+                    float rew = (30.01f) / (depth + 1);
+                    rewardList.Add(Tuple.Create(child, rew, 1));
                 }
-                float reward = this.PlayoutEvaluation(state, child, depth);
-                rewardList.Add(Tuple.Create(child, reward, 0));
+                else
+                {
+                    float reward = this.PlayoutEvaluation(state, child, depth);
+                    rewardList.Add(Tuple.Create(child, reward, 0));
+                }
             }
 
             if(rewardList.Count == 0)
@@ -388,130 +366,142 @@ namespace Completed
                 reward += rew;
             }   
 
-            // If food is closer than soda (Case works for no soda remaining and only food remaining on board)
-            if(prevClosestFoodDist < prevClosestSodaDist)
+            // If the map has atleast 1 food or 1 soda left to consume
+            if(prevFoodList.Count > 0 || prevSodaList.Count > 0)
             {
-                // This means eating food on next move
-                if(prevFoodList.Count > currentFoodList.Count)
-                {
-                    reward += 10.0f;
-                }
-                // This means moving closer to food
-                else if(currentClosestFoodDist < prevClosestFoodDist)
-                {
-                    float rew = (prevClosestFoodDist - currentClosestFoodDist) / (prevClosestFoodDist);
-                    rew /= (depth + 1);
-                    reward += rew;
-                }
-                // Moving away from food
-                else
-                {
-                    // But moving close to soda
-                    if(prevClosestSodaDist > currentClosestSodaDist)
-                    {
-                        // Using similar reward to food reward but dividing it further by 2
-                        // because moving away from the closest food to move closer to soda is not very beneficial
-                        float rew = (prevClosestSodaDist - currentClosestSodaDist) / (prevClosestSodaDist);
-                        rew /= ((depth + 1) * 2.0f);
-                        reward += rew;   
-                    }
-                    else
-                    {
-                        float rew = (prevClosestFoodDist - currentClosestFoodDist) / (prevClosestFoodDist);
-                        rew /= (depth + 1);
-                        reward += rew;
-                    }
-                }
-            }
-            // If soda is closer than food (Case works for no food remaining and only soda remaining on board)
-            else if(prevClosestFoodDist > prevClosestSodaDist)
-            {
-                // This means eating soda on next move
+                // If this state leads to eating soda, then give reward according to the depth in the tree
+                // Lower rewards for soda that is far (consumed in future) 
+                // and higher reward for soda that is close
                 if(prevSodaList.Count > currentSodaList.Count)
                 {
-                    reward += 20.0f;
-                }
-                // This means moving closer to soda
-                else if(currentClosestSodaDist < prevClosestSodaDist)
-                {
-                    float rew = (prevClosestSodaDist - currentClosestSodaDist) / (prevClosestSodaDist);
-                    rew /= (depth + 1);
-                    rew *= 2.0f;
+                    float rew = 20f / (depth + 1);
                     reward += rew;
-                    //reward += 2 * ((prevClosestSodaDist - currentClosestSodaDist) / (prevClosestSodaDist * (depth + 1)));
                 }
-                // Moving away from soda
-                else
-                {
-                    // But moving close to food
-                    if(prevClosestFoodDist > currentClosestFoodDist)
-                    {
-                        // Using similar reward to soda reward but dividing it further by 2
-                        // because moving away from the closest soda to move closer to food is not very beneficial
-                        float rew = (prevClosestFoodDist - currentClosestFoodDist) / (prevClosestFoodDist);
-                        rew /= ((depth + 1) * 2.0f);
-                        reward += rew;
-                        //reward += (prevClosestFoodDist - currentClosestFoodDist) / (prevClosestFoodDist * (depth + 1) * 2);
-                    }
-                    else
-                    {
-                        float rew = (prevClosestSodaDist - currentClosestSodaDist) / (prevClosestSodaDist);
-                        rew /= (depth + 1);
-                        reward += rew;
-                        //reward += (prevClosestSodaDist - currentClosestSodaDist) / (prevClosestSodaDist * (depth + 1));
-                    }
-                }
-            }
-            // If both of them are on the board and at same distance
-            else if(prevClosestFoodDist == prevClosestSodaDist && prevClosestFoodDist < 10000)
-            {
-                // If moving into this state leads to eating soda
-                if(prevSodaList.Count > currentSodaList.Count)
-                {
-                    reward += 20.0f;
-                }
-                // If moving into this tate leads to eating food
+                // If this state leads to eating food, then give reward according to the depth in the tree
+                // Lower rewards for food that is far (consumed in future) 
+                // and higher reward for food that is close
                 else if(prevFoodList.Count > currentFoodList.Count)
                 {
-                    reward += 10.0f;
-                }
-                // If moving close to food
-                else if(currentClosestFoodDist < currentClosestSodaDist)
-                {
-                    float rew = (prevClosestFoodDist - currentClosestFoodDist) / (prevClosestFoodDist);
-                    rew /= (depth + 1);
+                    float rew = 10f / (depth + 1);
                     reward += rew;
-                    //reward += (prevClosestFoodDist - currentClosestFoodDist) / (prevClosestFoodDist * (depth + 1));
                 }
-                // If moving close to soda
-                else if(currentClosestFoodDist > currentClosestSodaDist)
-                {
-                    float rew = (prevClosestSodaDist - currentClosestSodaDist) / (prevClosestSodaDist);
-                    rew /= (depth + 1);
-                    rew *= 2.0f;
-                    reward += rew;
-                    //reward += 2 * ((prevClosestSodaDist - currentClosestSodaDist) / (prevClosestSodaDist * (depth + 1)));
-                }
-                // If distance remains same
+                // If next state doesn't lead our player to eat food or soda.
                 else
                 {
-                    reward += 0.0f;
+                    // If food was closer than soda in previous state
+                    if(prevClosestFoodDist < prevClosestSodaDist)
+                    {
+                        // If we move a step closer to food
+                        if(prevClosestFoodDist > currentClosestFoodDist)
+                        {
+                            float rew = (prevClosestFoodDist - currentClosestFoodDist) / prevClosestFoodDist;
+                            rew /= (depth + 1);
+                            reward += rew;
+                        }
+                        // If we move a step away or keep same distance
+                        else
+                        {
+                            // but moving close to soda
+                            if(prevClosestSodaDist > currentClosestSodaDist)
+                            {
+                                float rew = (prevClosestSodaDist - currentClosestSodaDist) / prevClosestSodaDist;
+                                rew /= (depth + 1);
+                                reward += rew;
+                            }
+                            // not moving close to soda and moving away or keeping same distance from food
+                            else
+                            {
+                                float rew = (prevClosestFoodDist - currentClosestFoodDist) / prevClosestFoodDist;
+                                rew /= (depth + 1);
+                                reward += rew;
+                            }
+                        }
+                    }
+                    // If soda was closer than food in previous state
+                    else if(prevClosestFoodDist > prevClosestSodaDist)
+                    {
+                        // If we move a step closer to soda
+                        if(prevClosestSodaDist > currentClosestSodaDist)
+                        {
+                            float rew = (prevClosestSodaDist - currentClosestSodaDist) / prevClosestSodaDist;
+                            rew /= (depth + 1);
+                            reward += rew;
+                        }
+                        // If we move a step away or keep same distance
+                        else
+                        {
+                            // but moving close to food
+                            if(prevClosestFoodDist > currentClosestFoodDist)
+                            {
+                                float rew = (prevClosestFoodDist - currentClosestFoodDist) / prevClosestFoodDist;
+                                rew /= (depth + 1);
+                                reward += rew;
+                            }
+                            // not moving close to food and moving away or keeping same distance from soda
+                            else
+                            {
+                                float rew = (prevClosestSodaDist - currentClosestSodaDist) / prevClosestSodaDist;
+                                rew /= (depth + 1);
+                                reward += rew;
+                            }
+                        }
+                    }
+                    // If soda and food were at same distance in previous state
+                    else
+                    {
+                        // If this state also has same distance between food and soda
+                        if(currentClosestFoodDist == currentClosestSodaDist)
+                        {
+                            // then reward will be based on soda distance
+                            // So if the distance in previous state was 2 and it is also 2 in current state
+                            // then reward will be 0. If the distance reduces to 1 then reward will be
+                            // positive. If the distance increases to 3 then reward will be negative 
+                            float rew = (prevClosestSodaDist - currentClosestSodaDist) / prevClosestSodaDist;
+                            rew /= (depth + 1);
+                            reward += rew;
+                        }
+                        // If this state brings us closer to food than soda
+                        else if(currentClosestFoodDist < currentClosestSodaDist)
+                        {
+                            float rew = (prevClosestFoodDist - currentClosestFoodDist) / prevClosestFoodDist;
+                            rew /= (depth + 1);
+                            reward += rew;
+                        }
+                        // If this state brings us closer to soda than food
+                        else
+                        {
+                            float rew = (prevClosestSodaDist - currentClosestSodaDist) / prevClosestSodaDist;
+                            rew /= (depth + 1);
+                            rew *= 1.05f;
+                            reward += rew;
+                        }
+                    }
                 }
             }
-            // If no food or soda remaining on board
-            else if(prevClosestFoodDist == prevClosestSodaDist && prevClosestFoodDist == 10000)
+            // No food or soda left. Move towards exit 
+            else
             {
-                // If moving closer or keeping same distance to exit
-                if(prevDistToExit >= currentDistToExit)
+                if(prevDistToExit > 0)
                 {
-                    reward += 1.0f;
-                }
-                else
-                {
-                    reward += 0.0f;
+                    // Getting closer to exit
+                    if(prevDistToExit > currentDistToExit)
+                    {
+                        float rew = (prevDistToExit - currentDistToExit) / prevDistToExit;
+                        rew /= (depth + 1);
+                        rew *= 2;
+                        reward += rew;
+                    }
+                    // Getting farther or keeping same distance from exit
+                    else
+                    {
+                        float rew = (prevDistToExit - currentDistToExit) / prevDistToExit;
+                        rew /= (depth + 1);
+                        reward += rew;
+                    }
                 }
             }
 
+            
             return reward;
         }
 
@@ -575,7 +565,34 @@ namespace Completed
             Tuple<int, int> playerPos = state.GetPlayerPosition();
 
             return DistanceCalculator.ManhattanDistance(exit, playerPos);
+        }
 
+        public List<Tuple<GameState, Tuple<float, int>>> SuccessorMeanRewards(GameState state)
+        {
+            List<GameState> childNodes = this.parent_child_mapping[state];
+            List<Tuple<GameState, Tuple<float, int>>> rewardList = new List<Tuple<GameState, Tuple<float, int>>>();
+
+            foreach(GameState child in childNodes)
+            {
+                Tuple<float, int> reward = this.meanReward[child.GetPlayerPosition()];
+                rewardList.Add(Tuple.Create(child, reward));
+            }
+
+            return rewardList;
+        }
+
+        public List<Tuple<GameState, Tuple<float, int>>> SuccessorCumulativeRewards(GameState state)
+        {
+            List<GameState> childNodes = this.parent_child_mapping[state];
+            List<Tuple<GameState, Tuple<float, int>>> rewardList = new List<Tuple<GameState, Tuple<float, int>>>();
+
+            foreach(GameState child in childNodes)
+            {
+                Tuple<float, int> reward = this.cumulativeReward[child.GetPlayerPosition()];
+                rewardList.Add(Tuple.Create(child, reward));
+            }
+
+            return rewardList;
         }
     }
 }

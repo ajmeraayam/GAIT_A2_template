@@ -47,49 +47,19 @@ namespace Completed
             this.healthLeft = stateData.HealthLeft;
         }
 
-        /*public GameStateData DeepCopy()
-        {
-            List<Tuple<int, int>> floor = new List<Tuple<int, int>>(this.floorLoc);
-            List<Tuple<int, int>> food = new List<Tuple<int, int>>(this.foodLoc);
-            List<Tuple<int, int>> soda = new List<Tuple<int, int>>(this.sodaLoc);
-            List<Tuple<int, int>> breakableWalls = new List<Tuple<int, int>>(this.breakableWallsLoc);
-            List<Tuple<int, int>> enemies = new List<Tuple<int, int>>(this.enemiesLoc);
-            Tuple<int, int> exit = Tuple.Create(this.exitLoc.Item1, this.exitLoc.Item2);
-            GameStateData state = new GameStateData(floor, food, sodaLoc, breakableWalls, enemies, exit);
-            return state;
-        }*/
-
         public void UpdateStateData(Tuple<int, int> playerPos)
         {
-            if(this.foodLoc.Contains(playerPos))
+            if(this.sodaLoc.Any(tup => tup.Item1 == playerPos.Item1 && tup.Item2 == playerPos.Item2))
             {
-                this.foodLoc.Remove(playerPos);
+                this.sodaLoc.RemoveAll(tup => tup.Item1 == playerPos.Item1 && tup.Item2 == playerPos.Item2);
             }
-            if(this.sodaLoc.Contains(playerPos))
+
+            if(this.foodLoc.Any(tup => tup.Item1 == playerPos.Item1 && tup.Item2 == playerPos.Item2))
             {
-                this.sodaLoc.Remove(playerPos);
+                this.foodLoc.RemoveAll(tup => tup.Item1 == playerPos.Item1 && tup.Item2 == playerPos.Item2);
             }
             this.healthLeft--;
         }
-
-        /*public override bool Equals(object obj)
-        {
-            return this.Equals(obj as GameStateData);
-        }
-
-        public bool Equals(GameStateData other)
-        {
-            if(this.foodLoc.Count != other.FoodLoc.Count || !this.foodLoc.Except(other.FoodLoc).ToList().Any())
-                return false;
-            if(this.sodaLoc.Count != other.SodaLoc.Count || !this.sodaLoc.Except(other.SodaLoc).ToList().Any())
-                return false;
-            if(this.breakableWallsLoc.Count != other.BreakableWallsLoc.Count || !this.breakableWallsLoc.Except(other.BreakableWallsLoc).ToList().Any())
-                return false;
-            if(this.enemiesLoc.Count != other.EnemiesLoc.Count || !this.enemiesLoc.Except(other.EnemiesLoc).ToList().Any())
-                return false;
-            
-            return true;
-        }*/
 
         public bool CompareData(GameStateData other)
         {
@@ -104,26 +74,5 @@ namespace Completed
             
             return true;
         }
-
-        /*public override int GetHashCode()
-        {
-            int hash = this.healthLeft;
-            if(this.enemiesLoc.Count != 0)
-            {
-                hash = (hash * 23) + this.enemiesLoc.Count;
-                foreach(Tuple<int, int> tup in this.enemiesLoc)
-                {
-                    hash *= 23;
-                    if(tup != null)
-                        hash += tup.GetHashCode();
-                }
-            }
-            return hash;
-        }
-
-        public override int GetHashCode()
-        {
-            return 1;
-        }*/
     }
 }

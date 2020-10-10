@@ -75,8 +75,8 @@ namespace Completed
 
         private void LoadMapObjects()
         {
-            Transform[] childBoardTransforms = boardObjects.GetComponentsInChildren<Transform>(true);
-            Transform[] childDynamicTransforms = dynamicObjects.GetComponentsInChildren<Transform>(true);
+            Transform[] childBoardTransforms = boardObjects.GetComponentsInChildren<Transform>();
+            Transform[] childDynamicTransforms = dynamicObjects.GetComponentsInChildren<Transform>();
             
             GameObject[] childBoardObjects = new GameObject[childBoardTransforms.Length];
             for(int i = 0; i < childBoardTransforms.Length; i++)

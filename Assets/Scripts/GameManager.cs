@@ -143,7 +143,7 @@ namespace Completed
 
             //Start moving enemies.
             playerMovesSinceEnemyMove = 0;
-            StartCoroutine (MoveEnemies ());
+            //StartCoroutine (MoveEnemies ());
 		}
 		
 		//Call this to add the passed in Enemy to the List of Enemy objects.
