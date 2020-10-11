@@ -4,6 +4,9 @@ using System.Collections;
 
 namespace Completed
 {
+	using System;
+	using System.Linq;
+	using System.Collections;
 	using System.Collections.Generic;		//Allows us to use Lists. 
 	using UnityEngine.UI;					//Allows us to use UI.
 	
@@ -12,11 +15,11 @@ namespace Completed
         public bool trainingMode = false;
         public float moveTime = 0.1f;               //Time it will take object to move, in seconds.
         public float inverseMoveTime;               //Used to make movement more efficient.
-        public float restartLevelDelay = 1f;		//Delay time in seconds to restart level.
+        public float restartLevelDelay = 4f;		//Delay time in seconds to restart level.
 
         public const int playerStartFood = 100;
 
-        public float levelStartDelay = 2f;						//Time to wait before starting level, in seconds.
+        public float levelStartDelay = 4f;						//Time to wait before starting level, in seconds.
 		public float turnDelay = 0.1f;							//Delay between each Player turn.
 		public static GameManager instance = null;              //Static instance of GameManager which allows it to be accessed by any other script.
 
@@ -30,11 +33,13 @@ namespace Completed
 		private List<Enemy> enemies;							//List of all Enemy units, used to issue them move commands.
 		private bool enemiesMoving;								//Boolean to check if enemies are moving.
 		public bool doingSetup = true;                          //Boolean to check if we're setting up board, prevent Player from moving during setup.
+		private PlayerAgent playerAgentScript;
 
         public void CreateNewLevel()
         {
             instance.level++;
-            instance.InitGame();
+            //instance.InitGame();
+			StartCoroutine(instance.InitGame());
         }
 
 		//Awake is always called before any Start functions
@@ -63,9 +68,11 @@ namespace Completed
 			
 			//Get a component reference to the attached BoardManager script
 			boardScript = GetComponent<BoardManager>();
+			playerAgentScript = GameObject.Find("Player").GetComponent<PlayerAgent>();
 			
 			//Call the InitGame function to initialize the first level 
-			InitGame();
+			//InitGame();
+			StartCoroutine(InitGame());
 		}
 
         /*
@@ -85,10 +92,8 @@ namespace Completed
             instance.InitGame();
         }
         */
-
 		
-		//Initializes the game for each level.
-		void InitGame()
+		IEnumerator InitGame()
 		{
 			//While doingSetup is true the player can't move, prevent player from moving while title card is up.
 			doingSetup = true;
@@ -109,7 +114,7 @@ namespace Completed
 			levelImage.SetActive(true);
 			
 			//Call the HideLevelImage function with a delay in seconds of levelStartDelay.
-			Invoke("HideLevelImage", levelStartDelay);
+			//Invoke("HideLevelImage", levelStartDelay);
 			
 			//Clear any Enemy objects in our List to prepare for next level.
 			enemies.Clear();
@@ -117,10 +122,25 @@ namespace Completed
 			//Call the SetupScene function of the BoardManager script, pass it current level number.
 			boardScript.SetupScene(level);
 
+			yield return new WaitForSeconds(2f);
+
+			DistanceCalculator calc = GenerateMazeDistances();
+			playerAgentScript.StoreDistanceCalculator(calc);
             playerMovesSinceEnemyMove = 0;
+			//Call the HideLevelImage function with a delay in seconds of levelStartDelay.
+			Invoke("HideLevelImage", levelStartDelay);
+			yield return null;
         }
-		
-		
+
+		DistanceCalculator GenerateMazeDistances()
+		{
+			List<Tuple<int, int>> floorLoc = boardScript.GetFloorLocations();
+			List<Tuple<int, int>> breakableWallsLoc = boardScript.GetBreakableWallsLocations();
+			DistanceCalculator distanceCalculator = new DistanceCalculator(floorLoc, breakableWallsLoc);
+			distanceCalculator.CalculateDistances();
+			return distanceCalculator;
+		}
+
 		//Hides black image used between levels
 		void HideLevelImage()
 		{

@@ -4,6 +4,7 @@ using UnityEngine;
 namespace Completed
 {
     using System;
+    using System.Linq;
     using System.Collections.Generic;
 
     public class GameState
@@ -259,38 +260,13 @@ namespace Completed
             return (stateData.ExitLoc == pos);
         }
 
-        /*public override bool Equals(object obj)
-        {
-            return this.Equals(obj as GameState);
-        }
-
-        public bool Equals(GameState other)
-        {
-            if(this.stateData.Equals(other.StateData) && this.playerPos == other.playerPos)
-                return true;
-            else
-                return false;
-        }*/
-
         public bool CheckEnemyOnCurrentLoc()
         {
-            if(this.stateData.EnemiesLoc.Contains(this.playerPos))
+            if(this.stateData.EnemiesLoc.Any(tup => tup.Item1 == playerPos.Item1 && tup.Item2 == playerPos.Item2))
                 return true;
             else
                 return false;
         }
-
-        /*public override int GetHashCode()
-        {
-            int hash = (int) this.playerPosition.x + (int) this.playerPosition.y;
-            hash *= 23;
-            hash += this.stateData.GetHashCode(); 
-            return hash;
-        }
-        public override int GetHashCode()
-        {
-            return 1;
-        }*/
 
         public bool CompareStateData(GameState other)
         {

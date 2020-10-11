@@ -18,8 +18,9 @@ namespace Completed
         public int training_threshold;
         private int playout_threshold;
         public bool processing;
+        private DistanceCalculator distanceCalculator;
 
-        public MCTS()
+        public MCTS(DistanceCalculator distCalc)
         {
             cumulativeReward = new Dictionary<Tuple<int, int>, Tuple<float, int>>(new CustomTupleComparer());
             meanReward = new Dictionary<Tuple<int, int>, Tuple<float, int>>(new CustomTupleComparer());
@@ -30,6 +31,7 @@ namespace Completed
             training_threshold = 15;
             playout_threshold = 1;              // 5
             processing = false;
+            this.distanceCalculator = distCalc;
         }
         
         public void RunNextTrainingIteration(GameState gameState)
@@ -46,7 +48,11 @@ namespace Completed
             {
                 Tuple<int, int> child_loc = child.GetPlayerPosition();
                 //Tuple<float, int> child_reward = this.meanReward[child_loc];
-                Tuple<float, int> child_reward = this.cumulativeReward[child_loc];
+                Tuple<float, int> child_reward;
+                if(this.cumulativeReward.ContainsKey(child_loc))
+                    child_reward = this.cumulativeReward[child_loc];
+                else
+                    child_reward = Tuple.Create(-30.0f, -1);
                 childRewardList.Add(Tuple.Create(child, child_reward.Item1, child_reward.Item2));
             }
             // Sort the reward list by win reward and if same win reward, then sort by reward
@@ -87,7 +93,7 @@ namespace Completed
                 }
                 Tuple<int, int> currentPos = state.GetPlayerPosition();
                 Tuple<int, int> childPos = childState.GetPlayerPosition();
-                int delta_l = DistanceCalculator.ManhattanDistance(currentPos, childPos);
+                int delta_l = this.distanceCalculator.GetMazeDistance(currentPos, childPos);
                 Tuple<GameState, float, int> next_iter = this.TreeSim(childState, depth + delta_l);
                 this.UpdateRewards(state, next_iter.Item2, next_iter.Item3);
                 return Tuple.Create(state, next_iter.Item2, next_iter.Item3);
@@ -361,9 +367,16 @@ namespace Completed
             // Negative reward if moving close to enemy, positive if moving away from enemy
             if(currentClosestEnemyDist < 10000)
             {
-                float rew = (currentClosestEnemyDist - prevClosestEnemyDist) / (currentClosestEnemyDist);
-                rew /= (depth + 1);
-                reward += rew;
+                if(prevClosestEnemyDist <= 3)
+                {
+                    float rew = (currentClosestEnemyDist - prevClosestEnemyDist) / (currentClosestEnemyDist);
+                    rew /= (depth + 1);
+                    if(prevClosestEnemyDist > currentClosestEnemyDist)
+                    {    
+                        rew *= 2;   
+                    }
+                    reward += rew;
+                }
             }   
 
             // If the map has atleast 1 food or 1 soda left to consume
@@ -513,7 +526,7 @@ namespace Completed
             int distance = 10000;
             foreach(Tuple<int, int> enemy in enemiesList)
             {
-                int dist = DistanceCalculator.ManhattanDistance(enemy, playerPos);
+                int dist = this.distanceCalculator.GetMazeDistance(enemy, playerPos);
                 if(dist < distance)
                 {
                     distance = dist;
@@ -531,7 +544,7 @@ namespace Completed
             int distance = 10000;
             foreach(Tuple<int, int> food in foodList)
             {
-                int dist = DistanceCalculator.ManhattanDistance(food, playerPos);
+                int dist = this.distanceCalculator.GetMazeDistance(food, playerPos);
                 if(dist < distance)
                 {
                     distance = dist;
@@ -549,7 +562,7 @@ namespace Completed
             int distance = 10000;
             foreach(Tuple<int, int> soda in sodaList)
             {
-                int dist = DistanceCalculator.ManhattanDistance(soda, playerPos);
+                int dist = this.distanceCalculator.GetMazeDistance(soda, playerPos);
                 if(dist < distance)
                 {
                     distance = dist;
@@ -564,7 +577,7 @@ namespace Completed
             Tuple<int, int> exit = state.GetExitLoc();
             Tuple<int, int> playerPos = state.GetPlayerPosition();
 
-            return DistanceCalculator.ManhattanDistance(exit, playerPos);
+            return this.distanceCalculator.GetMazeDistance(exit, playerPos);
         }
 
         public List<Tuple<GameState, Tuple<float, int>>> SuccessorMeanRewards(GameState state)
@@ -574,7 +587,11 @@ namespace Completed
 
             foreach(GameState child in childNodes)
             {
-                Tuple<float, int> reward = this.meanReward[child.GetPlayerPosition()];
+                Tuple<float, int> reward;
+                if(this.meanReward.ContainsKey(child.GetPlayerPosition()))
+                    reward = this.meanReward[child.GetPlayerPosition()];
+                else
+                    reward = Tuple.Create(-30.0f, -1);
                 rewardList.Add(Tuple.Create(child, reward));
             }
 
@@ -588,7 +605,11 @@ namespace Completed
 
             foreach(GameState child in childNodes)
             {
-                Tuple<float, int> reward = this.cumulativeReward[child.GetPlayerPosition()];
+                Tuple<float, int> reward;
+                if(this.cumulativeReward.ContainsKey(child.GetPlayerPosition()))
+                    reward = this.cumulativeReward[child.GetPlayerPosition()];
+                else
+                    reward = Tuple.Create(-30.0f, -1);
                 rewardList.Add(Tuple.Create(child, reward));
             }
 

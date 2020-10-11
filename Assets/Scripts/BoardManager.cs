@@ -4,7 +4,6 @@ using System.Collections.Generic; 		//Allows us to use Lists.
 using Random = UnityEngine.Random; 		//Tells Random to use the Unity Engine random number generator.
 
 namespace Completed
-	
 {
 	
 	public class BoardManager : MonoBehaviour
@@ -225,6 +224,41 @@ namespace Completed
 
             //Instantiate the exit tile in the upper right hand corner of our game board
             Instantiate(exit, exitPos, Quaternion.identity, dynamicObjectsHolder.transform);
+        }
+
+        public List<Tuple<int, int>> GetFloorLocations()
+        {
+            List<Tuple<int, int>> floorLoc = new List<Tuple<int, int>>();
+            Transform[] childBoardTransforms = boardHolder.GetComponentsInChildren<Transform>();
+
+            for(int i = 0; i < childBoardTransforms.Length; i++)
+            {
+                if(childBoardTransforms[i].gameObject.CompareTag("Floor"))
+                {
+                    Vector3 loc = childBoardTransforms[i].position;
+                    Tuple<int, int> tup = new Tuple<int, int>((int) loc.x, (int) loc.y);
+                    floorLoc.Add(tup);
+                }
+            }
+
+            return floorLoc;
+        }
+
+        public List<Tuple<int, int>> GetBreakableWallsLocations()
+        {
+            List<Tuple<int, int>> breakableWallsLoc = new List<Tuple<int, int>>();
+            Transform[] childDynamicTransforms = dynamicObjectsHolder.GetComponentsInChildren<Transform>();
+            for(int i = 0; i < childDynamicTransforms.Length; i++)
+            {
+                if(childDynamicTransforms[i].gameObject.CompareTag("BreakableWall"))
+                {
+                    Vector3 loc = childDynamicTransforms[i].position;
+                    Tuple<int, int> tup = new Tuple<int, int>((int) loc.x, (int) loc.y);
+                    breakableWallsLoc.Add(tup);
+                }
+            }
+
+            return breakableWallsLoc;
         }
 	}
 }
