@@ -48,38 +48,6 @@ namespace Completed
             this.calculator = calc;
         }
 
-        /*public void Update()
-        {
-            //If it's not the player's turn, exit the function.
-            if (!CanMove())
-            {
-                return;
-            }
-
-            //Get input from the input manager, round it to an integer and store in horizontal to set x axis move direction
-            int horizontal = (int)(Input.GetAxisRaw("Horizontal"));
-
-            //Get input from the input manager, round it to an integer and store in vertical to set y axis move direction
-            int vertical = (int)(Input.GetAxisRaw("Vertical"));
-
-            if (horizontal < 0)
-            {
-                player.AttemptMove<Wall>(-1, 0);
-            }
-            else if (horizontal > 0)
-            {
-                player.AttemptMove<Wall>(1, 0);
-            }
-            else if (vertical < 0)
-            {
-                player.AttemptMove<Wall>(0, -1);
-            }
-            else if (vertical > 0)
-            {
-                player.AttemptMove<Wall>(0, 1);
-            }
-        }*/
-
         private IEnumerator MCTSCoroutine()
         {
             yield return new WaitForSeconds(5f);
@@ -89,29 +57,14 @@ namespace Completed
                 {
                     this.mcts = new MCTS(this.calculator);
                     GameState gameState = new GameState(this.player, this.loaderScript, this.gameManager, this.boardManager, this.dynamicObjects, this.boardObjects);
-                    print("Starting training");
                     
                     int iter = 0;
-                    float sleepTime = 1f / this.mcts.training_threshold;
+                    float sleepTime = 0.25f / this.mcts.training_threshold;
                     while(iter < this.mcts.training_threshold)
                     {
                         this.mcts.RunNextTrainingIteration(gameState);
                         iter++;
                         yield return new WaitForSeconds(sleepTime);
-                    }
-
-                    print("Current position - " + gameState.GetPlayerPosition());
-                    print("Number of enemies - " + gameState.NumEnemies());
-                    List<Tuple<GameState, Tuple<float, int>>> successorRewards = this.mcts.SuccessorMeanRewards(gameState);
-                    foreach(Tuple<GameState, Tuple<float, int>> tup in successorRewards)
-                    {
-                        print("Position - " + tup.Item1.GetPlayerPosition() + " Reward - " + tup.Item2);
-                    }
-
-                    List<Tuple<GameState, Tuple<float, int>>> successorCumulativeRewards = this.mcts.SuccessorCumulativeRewards(gameState);
-                    foreach(Tuple<GameState, Tuple<float, int>> tup in successorCumulativeRewards)
-                    {
-                        print("Position - " + tup.Item1.GetPlayerPosition() + " Cumulative Reward - " + tup.Item2);
                     }
 
                     string direction = "";
