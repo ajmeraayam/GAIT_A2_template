@@ -48,18 +48,23 @@ namespace Completed
             this.calculator = calc;
         }
 
+        // Coroutine runs till the user stops the game
         private IEnumerator MCTSCoroutine()
         {
             yield return new WaitForSeconds(5f);
             while(true)
             {
+                // If player can move, then start the tree search process
                 if(CanMove())
                 {
+                    // Create a new instance of MCTS class
                     this.mcts = new MCTS(this.calculator);
+                    // Create a GameState object according to the current condition of the game 
                     GameState gameState = new GameState(this.player, this.loaderScript, this.gameManager, this.boardManager, this.dynamicObjects, this.boardObjects);
                     
                     int iter = 0;
                     float sleepTime = 0.25f / this.mcts.training_threshold;
+                    // Run training iterations until it reaches the training threshold 
                     while(iter < this.mcts.training_threshold)
                     {
                         this.mcts.RunNextTrainingIteration(gameState);
@@ -68,10 +73,10 @@ namespace Completed
                     }
 
                     string direction = "";
+                    // Get the next action
                     direction = this.mcts.GetNextDirection(gameState);
                     
-                    print("Direction - " + direction);
-
+                    // Call the AttemptMove method to move the player
                     if(direction.Equals("NORTH"))
                     {
                         player.AttemptMove<Wall>(0, 1);
@@ -94,6 +99,7 @@ namespace Completed
                     }
                     yield return new WaitForSeconds(1f);
                 }
+                // else sleep for 2 seconds and then check again if player can move
                 else
                 {
                     print("Setup or movement animation going on. Sleeping for 2 seconds");

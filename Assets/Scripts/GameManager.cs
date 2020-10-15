@@ -123,8 +123,9 @@ namespace Completed
 			boardScript.SetupScene(level);
 
 			yield return new WaitForSeconds(2f);
-
+			// Generate all the distances for the generated maze
 			DistanceCalculator calc = GenerateMazeDistances();
+			// Pass the DistanceCalculator object reference in the PlayerAgent script
 			playerAgentScript.StoreDistanceCalculator(calc);
             playerMovesSinceEnemyMove = 0;
 			//Call the HideLevelImage function with a delay in seconds of levelStartDelay.
@@ -132,6 +133,7 @@ namespace Completed
 			yield return null;
         }
 
+		// Create a new object of DistanceCalculator and initiate the calculation process
 		DistanceCalculator GenerateMazeDistances()
 		{
 			List<Tuple<int, int>> floorLoc = boardScript.GetFloorLocations();

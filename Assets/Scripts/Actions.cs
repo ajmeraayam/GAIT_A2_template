@@ -8,13 +8,16 @@ namespace Completed
 
     public static class Actions
     {
+        // Store direction strings as keys and tuple as value
         static Dictionary<string, Tuple<int, int>> directions = new Dictionary<string, Tuple<int, int>>() {{"NORTH", Tuple.Create(0, 1)}, {"SOUTH", Tuple.Create(0, -1)}, {"EAST", Tuple.Create(1, 0)}, {"WEST", Tuple.Create(-1, 0)}, {"STOP", Tuple.Create(0, 0)}};
-
+        
         static List<Tuple<string, Tuple<int, int>>> directionList = DirectionToList();
 
+        // Convert the directions dictionary to a list
         public static List<Tuple<string, Tuple<int, int>>> DirectionToList()
         {
-            List<Tuple<string, Tuple<int, int>>> directionsToList = new List<Tuple<string, Tuple<int, int>>>(); 
+            List<Tuple<string, Tuple<int, int>>> directionsToList = new List<Tuple<string, Tuple<int, int>>>();
+            // Create a tuple of direction string and location and store it in a list 
             foreach(KeyValuePair<string, Tuple<int, int>> direction in directions)
             {
                 directionsToList.Add(Tuple.Create(direction.Key, direction.Value));
@@ -23,6 +26,7 @@ namespace Completed
             return directionsToList;
         }
 
+        // Generate successor player position according to the given action and player position
         public static Tuple<int, int> GetSuccessor(Tuple<int, int> playerPos, string action)
         {
             // X and Y of Player position
@@ -34,6 +38,7 @@ namespace Completed
             return Tuple.Create(x + vector.Item1, y + vector.Item2);
         }
 
+        // Returns the reverse direction for the given action
         public static string ReverseDirection(string action)
         {
             if(action.Equals("NORTH"))
@@ -88,13 +93,16 @@ namespace Completed
             return legalDirections;
         } 
 
+        // Get the direction required to reach from given game state to given child state
         public static string GetDirectionFromStates(GameState state, GameState child)
         {
+            // Player position for current game state and child game state
             Tuple<int, int> currentPos = state.GetPlayerPosition();
             Tuple<int, int> nextPos = child.GetPlayerPosition();
 
+            // Find the difference between child position and current position
             Tuple<int, int> diffTup = Tuple.Create((nextPos.Item1 - currentPos.Item1), (nextPos.Item2 - currentPos.Item2));
-
+            // And use that difference to decide the action required
             if(diffTup.Item1 == 0)
             {
                 if(diffTup.Item2 == 0)

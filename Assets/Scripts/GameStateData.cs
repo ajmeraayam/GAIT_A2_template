@@ -9,18 +9,24 @@ namespace Completed
 
     public class GameStateData
     {
+        // Store list of floor locations
         private List<Tuple<int, int>> floorLoc;
         public List<Tuple<int, int>> FloorLoc { get { return floorLoc; } }
         private int healthLeft;
         public int HealthLeft { get { return healthLeft; } }
+        // Store list of food locations
         private List<Tuple<int, int>> foodLoc;
         public List<Tuple<int, int>> FoodLoc { get { return foodLoc; } }
+        // Store list of soda locations
         private List<Tuple<int, int>> sodaLoc;
         public List<Tuple<int, int>> SodaLoc { get { return sodaLoc; } }
+        // Store list of breakable wall locations
         private List<Tuple<int, int>> breakableWallsLoc;
         public List<Tuple<int, int>> BreakableWallsLoc { get { return breakableWallsLoc; } }
+        // Store exit location
         private Tuple<int, int> exitLoc;
         public Tuple<int, int> ExitLoc { get { return exitLoc; } }
+        // Store list of enemy locations
         private List<Tuple<int, int>> enemiesLoc;
         public List<Tuple<int, int>> EnemiesLoc { get { return enemiesLoc; } }
 
@@ -47,6 +53,8 @@ namespace Completed
             this.healthLeft = stateData.HealthLeft;
         }
 
+        // Remove the locations that match the player position from the food and soda list
+        // Reduce the health of the player by 1
         public void UpdateStateData(Tuple<int, int> playerPos)
         {
             if(this.sodaLoc.Any(tup => tup.Item1 == playerPos.Item1 && tup.Item2 == playerPos.Item2))
@@ -61,6 +69,7 @@ namespace Completed
             this.healthLeft--;
         }
 
+        // Compare the data in this instance with another instance of GameStateData
         public bool CompareData(GameStateData other)
         {
             if(this.foodLoc.Count != other.FoodLoc.Count || !this.foodLoc.Except(other.FoodLoc).ToList().Any())

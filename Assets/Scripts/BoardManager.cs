@@ -226,6 +226,7 @@ namespace Completed
             Instantiate(exit, exitPos, Quaternion.identity, dynamicObjectsHolder.transform);
         }
 
+        // Returns all the xy position of the floor gameobjects
         public List<Tuple<int, int>> GetFloorLocations()
         {
             List<Tuple<int, int>> floorLoc = new List<Tuple<int, int>>();
@@ -244,6 +245,7 @@ namespace Completed
             return floorLoc;
         }
 
+        // Returns all the xy position of the breakable wall gameobjects
         public List<Tuple<int, int>> GetBreakableWallsLocations()
         {
             List<Tuple<int, int>> breakableWallsLoc = new List<Tuple<int, int>>();
