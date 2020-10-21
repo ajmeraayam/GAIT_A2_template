@@ -1,2 +1,2 @@
 # GAIT_A2_template
-Optional template for Games and AI Assignment 2
+Open the Main scene in Unity and click on Play to start the game.
